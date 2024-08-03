@@ -21,7 +21,7 @@ jobs:
       - run: npm test
       - run: npx nx build frontend --prod
       - run: npx nx build backend --prod
-      - uses: vercel/vercel-action@v3
+      - uses: amondnet/vercel-action@v25
         with:
           token: ${{ secrets.VERCEL_TOKEN }}
 
