@@ -1,41 +1,40 @@
-name: CI
+# This build is used for Nx Cloud Computation and SonarCloud Scan
+# This workflow will be triggered on pushes to the main branch and will run Nx tasks in Nx Cloud, followed by a SonarCloud scan.
+
+name: CI PIPELINE
 
 on:
   push:
     branches:
-      - master
-  pull_request:
-
-permissions:
-  actions: read
-  contents: read
+      - main
 
 jobs:
-  main:
+  nx-cloud:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
-      
-      
-      # Cache node_modules
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: 20
-          cache: 'npm'
-       
-      - run: npm ci --legacy-peer-deps
-      - uses: nrwl/nx-set-shas@v4
+          node-version: '18' # Specify the Node.js version
 
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
+      - name: Install dependencies
+        run: npm install
+
+      - name: Nx Cloud computation
+        run: npx nx affected --target=build --all --parallel --maxParallel=4
+
+      - name: SonarCloud Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          npm install -g sonar-scanner
+          sonar-scanner \
+            -Dsonar.organization=<your-sonarcloud-organization> \
+            -Dsonar.projectKey=<your-project-key> \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
