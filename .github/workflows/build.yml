@@ -1,6 +1,5 @@
 # This file is For Deployment to Vercel
 # This workflow will be triggered on pushes to the main branch and will deploy the application to Vercel.
-
 name: Deploy to Vercel
 
 on:
@@ -13,22 +12,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/cache@v3
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+
+      - uses: actions/setup-node@v3
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm install
+      - run: npm install
+
+      - run: npm test
 
       - name: Build frontend
-        run: npx nx build frontend
+        run: npx nx build frontend --prod
+        continue-on-error: false
 
       - name: Build backend
-        run: npx nx build backend
+        run: npx nx build backend --prod
+        continue-on-error: false
 
       - name: Deploy to Vercel
         env:
