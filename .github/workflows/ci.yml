@@ -19,13 +19,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18' # Specify the Node.js version
+          node-version: '20' # Specify the Node.js version
 
       - name: Install dependencies
         run: npm install
 
       - name: Nx Cloud computation
-        run: npx nx affected --target=build --all --parallel --maxParallel=4
+        run: npx nx run-many --target=build --all --parallel --maxParallel=4
 
       - name: SonarCloud Scan
         env:
